@@ -1,5 +1,7 @@
 # MyNote
 
 ## Todo
-[ ] DenseNet
-[ ] Jigsal Puzzle
+- [ ] DenseNet
+- [ ] Jigsal Puzzle
+
+@jefffang19
