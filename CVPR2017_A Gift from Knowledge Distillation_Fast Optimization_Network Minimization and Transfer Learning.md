@@ -4,6 +4,9 @@
 - [paper](https://openaccess.thecvf.com/content_cvpr_2017/papers/Yim_A_Gift_From_CVPR_2017_paper.pdf)
 - [github not found]()
 
+
+![](https://i.imgur.com/DtmMT53.png)
+
 ---
 
 # Knowledge Distilling
@@ -45,7 +48,7 @@
 
 #### Softmax
 
-![](https://i.imgur.com/FRkJBiU.png =200x)
+![](https://i.imgur.com/FRkJBiU.png)
 
 - T = 1 是 softmax 的特例
 - softmax 當整體輸入放大 N 倍，輸出會變得極端；反之整體縮小，輸出也會比較平滑
@@ -59,6 +62,12 @@
 ![image alt](https://img-blog.csdnimg.cn/20190911113740615.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L1BfTGFyVA==,size_16,color_FFFFFF,t_70)
 
 
+student 的 loss 由兩個 loss 組成
+
+![](https://i.imgur.com/qtuNWnA.png)
+
+1. 和 task ground truth 的 loss
+2. 和 teacher soft target 的 loss
 
 # FITNETS: HINTS FOR THIN DEEP NETS
 
@@ -69,4 +78,50 @@
 > [ICLR 2015](https://arxiv.org/pdf/1412.6550.pdf)
 
 因為 CVPR 2017 這篇一直跟 FITNETS 做比較，所以就稍微讀了一下
+
+
+>　FITNETS 這篇在上一篇 KD 的基礎下，介紹 ***Hint-based training***
+>
+> 因為上一篇只是單純讓 student 學習 teacher 的 soft target，可以想像成直接讓學生學習老師最後的答案
+> 
+> 這篇利用 teacher 的深度，讓 student 學習 teacher 每層 layer 的 feature，可以想像成讓 student 學習 teacher 做題中間得出的每個中間答案
+
+
+## Hint-based Training
+![](https://i.imgur.com/wghTfDL.png)
+
+
+### 名詞定義
+
+hint layer
+: 簡單來說就是 teacher hidden layer
+: hint layer 的 output 叫做 hint
+
+guided layer
+: 簡單來說就是 student hidden layer
+: guided layer 負責學習預測 hint layer 的 output (hint)
+
+### Hint-based training loss
+![](https://i.imgur.com/vfN1s2w.png)
+
+- μ~h~ 和 ν~g~ 分別是 teacher/student 到 hint/guided layer 的 params W~Hint~ 和 W~guide~ 的巢狀 function
+    - 就是用 weight 表示 x 的 function，function 的輸出就是 feature
+
+- γ 是 regressor function，用來調整 student 的 width 好讓和 teacher 的 width 一致
+    - 為了降低參數量，用 convolutional regressor 而不是 fully connected regressor
+- L2 loss function
+
+### Fitnet Stage-wise Training
+
+![](https://i.imgur.com/wUm8NUm.png)
+
+W~Hint~
+: 是 teacher 從最初的 layer 到 hint layer 的 weight
+
+W~Guided~ 
+: 是 student 從最初的 layer 到 guided layer 的 weight
+
+1. Hints Training
+2. Knowledge Distillation
+
 
