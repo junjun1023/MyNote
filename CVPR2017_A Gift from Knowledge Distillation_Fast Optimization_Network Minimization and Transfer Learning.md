@@ -9,7 +9,7 @@
 
 ---
 
-# Knowledge Distilling
+## Knowledge Distilling
 
 > 簡單來說，再好的 model 如果很肥大，inference 的時候就會受到各種限制，記憶體、運算量等等問題
 > 
@@ -23,9 +23,9 @@
 
 這篇論文最重要的一點就是提出 ***Soft Target*** 的概念
 
-### Soft Target
+#### Soft Target
 
-#### Hard Target
+##### Hard Target
 
 
 | A    | B    | C    | D    |
@@ -37,7 +37,7 @@
 - hard target 只有明確分出對和不對
 
 
-#### Soft Target
+##### Soft Target
 
 | A    | B    | C    | D    |
 | :--: | :--: | :--: | :--: |
@@ -46,7 +46,7 @@
 - 輸出的機率分布比較平坦，降低 label 的區別性，以獲得更多資訊，例如可以知道各類別的相異/相似程度
 - 提供更多隱含資訊 ( dark knowledge )
 
-#### Softmax
+##### Softmax
 
 ![](https://i.imgur.com/FRkJBiU.png)
 
@@ -69,7 +69,7 @@ student 的 loss 由兩個 loss 組成
 1. 和 task ground truth 的 loss
 2. 和 teacher soft target 的 loss
 
-# FITNETS: HINTS FOR THIN DEEP NETS
+## FITNETS: HINTS FOR THIN DEEP NETS
 
 > FITNETS 利用 model 的深度，train 一個比 teacher 深且瘦的 student model
 > 
@@ -87,11 +87,11 @@ student 的 loss 由兩個 loss 組成
 > 這篇利用 teacher 的深度，讓 student 學習 teacher 每層 layer 的 feature，可以想像成讓 student 學習 teacher 做題中間得出的每個中間答案
 
 
-## Hint-based Training
-![](https://i.imgur.com/wghTfDL.png)
+### Hint-based Training
 
 
-### 名詞定義
+
+#### 名詞定義
 
 hint layer
 : 簡單來說就是 teacher hidden layer
@@ -101,7 +101,7 @@ guided layer
 : 簡單來說就是 student hidden layer
 : guided layer 負責學習預測 hint layer 的 output (hint)
 
-### Hint-based training loss
+#### Hint-based training loss
 ![](https://i.imgur.com/vfN1s2w.png)
 
 - μ~h~ 和 ν~g~ 分別是 teacher/student 到 hint/guided layer 的 params W~Hint~ 和 W~guide~ 的巢狀 function
@@ -109,6 +109,7 @@ guided layer
 
 - γ 是 regressor function，用來調整 student 的 width 好讓和 teacher 的 width 一致
     - 為了降低參數量，用 convolutional regressor 而不是 fully connected regressor
+        - ![](https://i.imgur.com/wghTfDL.png)
 - L2 loss function
 
 ### Fitnet Stage-wise Training
@@ -124,4 +125,15 @@ W~Guided~
 1. Hints Training
 2. Knowledge Distillation
 
+- Hint-based training loss
+    - ![](https://i.imgur.com/vfN1s2w.png)
+- Knowledge distillation loss
+    - ![](https://i.imgur.com/BRVxJAL.png)
+
+- Algorithm
+    - ![](https://i.imgur.com/OYF2kSB.png)
+
+---
+
+## A Gift from Knowledge Distillation: Fast Optimization, Network Minimization and Transfer Learning
 
