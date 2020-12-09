@@ -25,7 +25,45 @@
     - s<small>t-1</small> 上一個 timestamp t-1 的 hidden state
     - c<small>t</small> 是由 encoder 最後一個 hidden state 計算得出的針對每個 target word 的 context vector
         - ![](https://i.imgur.com/HcDhExA.png)
+        - e<small>tj</small> 是 alignment model，衡量位置 j 附近的 input 和位置 t 附近的 output 有多匹配
         - 
+
+
+## Data
+
+### Training Data
+
+兩種 Datasets，各有 300,000 個 topic 和 label 的 pair
+
+- ds_wiki_tfidf
+    - label: article title
+    - topic: 文章中 TFIDF top30 的 terms
+- ds_wiki_sent
+    - label: article title
+    - topic: 文章前 30 個 terms
+- training ( 226,282 )，validate ( 12,424 )，test ( 11,800 )
+- 移除數字、特殊字元、稀有字、stop words
+- article titles ( labels ) 有 13,947 個 unique words
+- ds_wiki_tfidf 有 181,793 個 unique words
+- ds_wiki_sent 有 87,446 個 unique words
+
+### Testing Data
+
+兩個 Datasets 各自有 golden-standard labels
+
+- ds_wiki_tfidf
+    - topics_bhstia
+    - 每個 topic 有 19 個 candidate labels
+- ds_wiki_sent
+    - topics_bhatia_tfidf 是 topics_bhatia 的 extend version，每個 topic 多新增 20 個 terms
+
+
+
+## Experiments
+
+### Hyper Params
+
+隨機 random 看看哪個 validation loss 比較低選哪個
 
 
 
