@@ -54,6 +54,7 @@
 - ds_wiki_tfidf
     - topics_bhstia
     - 每個 topic 有 19 個 candidate labels
+    - topics' top 10 terms
 - ds_wiki_sent
     - topics_bhatia_tfidf 是 topics_bhatia 的 extend version，每個 topic 多新增 20 個 terms
 
@@ -65,7 +66,31 @@
 
 隨機 random 看看哪個 validation loss 比較低選哪個
 
+- optimizer: adam
+- learning rate: 0.001
+- loss: sparse categorical cross entropy loss
+- encoder: BiGRU, 200 hidden unit
+- decoder: GRU, 200 hidden unit
+- dropout: 0.1
 
+### Baseline
+
+- top-2 terms and top-3 terms
+
+
+### Label Evaluation
+
+> BERTScore
+> ![](https://i.imgur.com/VZCMO9n.png)
+> 不需要 exact match，可以做到抽換同義詞
+
+model's overall score is mean score over all topics
+![](https://i.imgur.com/akFTSVb.png)
+
+
+## Result and Discussion
+
+- 用 ds_wiki_sent training，用 topics_bhatia_tfidf testing 的 BERTScore 最高，因為額外多增加的 20 個 terms
 
 
 ## LDA ( Latent Dirichlet Allocation )
