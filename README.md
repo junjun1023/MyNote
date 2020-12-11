@@ -9,3 +9,4 @@
 - [ ] [BLEURT: Learning Robust Metrics for Text Generation](https://arxiv.org/pdf/2004.04696.pdf)
 
 @jefffang19
+- create a note to explain math concept
