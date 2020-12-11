@@ -13,3 +13,4 @@
 ## Todo
 - [ ] coordconv
 - [ ] [Decoupled Convolutions for CNNs](https://aaai.org/ocs/index.php/AAAI/AAAI18/paper/download/16349/16736)
+- [ ] Contrastive learning
