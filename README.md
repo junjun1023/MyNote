@@ -16,3 +16,4 @@
 - [ ] Contrastive learning
 - [ ] [CSPNET: A NEW BACKBONE THAT CAN ENHANCE LEARNING CAPABILITY OF CNN](https://arxiv.org/pdf/1911.11929.pdf)
 - [ ] [Contrastive learning of global and local features for medical image segmentation with limited annotations](https://arxiv.org/pdf/2006.10511.pdf)
+- [ ] [Contrastive Registration for Unsupervised Medical Image Segmentation](https://arxiv.org/pdf/2011.08894.pdf)
