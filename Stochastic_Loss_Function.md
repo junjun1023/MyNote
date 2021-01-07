@@ -1,5 +1,11 @@
 # Stochastic Loss Function
 
+01/04 感謝Fang-Yi補充
+> https://github.com/DingKe/ml-tutorial/tree/master/gumbel
+> 那個jupyter內容跟https://blog.csdn.net/JackyTintin/article/details/79364490一樣，有說明gumble-softmax的緣由
+> gumble.py內有實作，基本上跟郁文報的方式一樣，唯一差別只有他們實作上沒有代epsilon
+> 如果要實作可以參考
+
 ## Concept
 ![](https://i.imgur.com/vd7hlV6.png)
 
