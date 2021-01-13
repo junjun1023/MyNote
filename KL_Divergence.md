@@ -1,6 +1,5 @@
 # KL Divergence
 
-
 - 用來驗證**兩個機率分佈差異性的指標**
 - 因為其驗證不同分佈差異性的特性，適合應用在 loss-function 的設計上，可以在 backpropagation 的過程中，衡量預測解果與真實資料的相似程度
 
@@ -28,3 +27,10 @@ Q
 - 但如果 P 跟 Q 之間的資訊亂度是很大的，要用 Q 來表示 P，轉換的過程想必是非常複雜，所需要的資訊量也更大
 - 以 encode 的複雜度來看的話，那麼 P 轉換到 Q 跟 Q 轉換到 P 這兩件事的複雜度就不見得會相等，有可能正推是比較容易的，反推搞不好就很複雜
 
+
+
+# Mutual Information
+
+
+
+[HackMD](https://hackmd.io/@lEHmUoFNSfOem4UTt7O44g/SyecU0qCP)
