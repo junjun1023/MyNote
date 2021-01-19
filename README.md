@@ -7,6 +7,11 @@
 - [ ] [BLEURT: Learning Robust Metrics for Text Generation](https://arxiv.org/pdf/2004.04696.pdf)
 - [ ] [Generalized Focal Loss V2: Learning Reliable Localization Quality Estimation for Dense Object Detection](https://arxiv.org/pdf/2011.12885v1.pdf)
 
+### MI Related
+- [ ] [ICML 2019] [On Variational Bounds of Mutual Information](https://arxiv.org/pdf/1905.06922.pdf)
+- [ ] [ICML 2018] [Mutual Information Neural Estimation](https://arxiv.org/pdf/1801.04062.pdf)
+
+
 @jefffang19
 - create a note to explain math concept
 ## Todo
