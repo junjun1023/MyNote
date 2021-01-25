@@ -84,11 +84,11 @@ $e$
 ![](https://i.imgur.com/vBW2gcu.png =400x)
 
 ### Maximum Likelihood
-![](https://i.imgur.com/km5kGfu.png)
+![](https://i.imgur.com/km5kGfu.png =400x)
 
 #### Decoder
 
-![](https://i.imgur.com/ZIPvcZP.png)
+![](https://i.imgur.com/ZIPvcZP.png =400x)
 
 
 Likelihood
@@ -97,7 +97,7 @@ Likelihood
 : 透過 NN，近似 $latent\ space$ 的 $\mu, \sigma$
 
 #### Encoder
-![](https://i.imgur.com/C882UZT.png)
+![](https://i.imgur.com/C882UZT.png =400x)
 
 
 #### 數學推導
@@ -118,6 +118,8 @@ $4th$
 
 - 固定住 $P(x|z)$ 調整 $q(z|x)$，會讓 $L_b$ 一直上升，最後 KL divergence 會完全不見
 - 讓 $L_b$ 越大，那 $likelihood$ 就會越大
+- $\because KL(q(z|x)||P(z|x))$ 無法直接控制，所以只能調控 $L_b$
+
 
 為什麼 $P(x)$ 跟 $q(z|x)$ 無關？
 : $P(x)$ 跟 $q(z|x)$ 無關，因為 $P$ 是 dist. 跟 $q$ 這個 dist. 本來就無關
@@ -131,17 +133,17 @@ $4th$
 - $q$ 是一個 neural network 的 dist.，給定 $x$ 分佈，sample 某個 $z$ 的 $\mu, \sigma$
 - $-KL(q(z|x)||P(z)) \leq 0$
 
-為什麼要 $minimize KL(q(z|x)||P(z))$ ?
-: 
+為什麼要 $minimize\ KL(q(z|x)||P(z))$ ?
+: 整個 $L_b$ 越大越好，代表等號右邊兩項越大越好，$-KL(q(z|x)||P(z))$ 越大越好代表 $KL(q(z|x)||P(z))$ 越小越好
 
-![](https://i.imgur.com/LRGGLzW.png)
+![](https://i.imgur.com/LRGGLzW.png =400x)
 
 - $\int_{z}q(z|x)logP(x|z)dz=E_{q(z|x)}[logP(x|z)]$
 - 視為 weighted sum
 - 從 $q(z|x)$ sample data，給一個 $x$ 的時候，根據 $q(z|x)$ 來 sample data，要讓 $logP(x|z)$ 越大越好
 
-為什麼要 $maximize \int_{z}q(z|x)logP(x|z)dz$ ?
-: 
+為什麼要 $maximize\ \int_{z}q(z|x)logP(x|z)dz$ ?
+: 整個 $L_b$ 越大越好，代表等號右邊兩項越大越好，代表 $\int_{z}q(z|x)logP(x|z)dz$ 越大越好
 
 
 ### Problems of VAE
@@ -149,6 +151,16 @@ $4th$
 ![](https://i.imgur.com/ep9OGf4.png =400x)
 
 - VAE 想要產生某張 image 跟 database 的 image 越像越好，沒有想過真的產生新的 image，或是只是把 database 的 image 做 linear combination
+
+
+$D_{KL}(P||Q) \geq 0$
+
+$Likelihood\ \geq E_{q(z|x)}[logP(x|z)] -  \beta(t)KL(q(z|x)||P(z))$
+
+
+
+##### [數學推導](http://jialexu.com/index.php/archives/395/)
+
 
 ##### [HackMD](https://hackmd.io/@lEHmUoFNSfOem4UTt7O44g/BJ6dXhBku)
 
