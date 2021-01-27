@@ -11,6 +11,14 @@
 - [ ] [ICML 2019] [On Variational Bounds of Mutual Information](https://arxiv.org/pdf/1905.06922.pdf)
 - [ ] [ICML 2018] [Mutual Information Neural Estimation](https://arxiv.org/pdf/1801.04062.pdf)
 
+- [ ] [ICLR 2020] [Cross-Domain Few-Shot Classification via Learned Feature-Wise Transformation](https://iclr.cc/virtual_2020/poster_SJl5Np4tPr.html)
+- [ ] [ICLR 2020] [Skip Connections Matter: On the Transferability of Adversarial Examples Generated with ResNets](https://iclr.cc/virtual_2020/poster_BJlRs34Fvr.html)
+- [ ] [ICLR 2020] [Automatically Discovering and Learning New Visual Categories with Ranking Statistics](https://iclr.cc/virtual_2020/poster_BJl2_nVFPB.html)
+- [ ] [ICLR 2020] [Domain Adaptive Multibranch Networks](https://iclr.cc/virtual_2020/poster_rJxycxHKDS.html)
+- [ ] [ICLR 2020] [Weakly Supervised Disentanglement with Guarantees](https://iclr.cc/virtual_2020/poster_HJgSwyBKvr.html)
+- [ ] [ICLR 2020] [U-GAT-IT: Unsupervised Generative Attentional Networks with Adaptive Layer-Instance Normalization for Image-to-Image Translation](https://iclr.cc/virtual_2020/poster_BJlZ5ySKPH.html)
+- [ ] [ICLR 2020] [How much Position Information Do Convolutional Neural Networks Encode?](https://iclr.cc/virtual_2020/poster_rJeB36NKvB.html)
+
 
 @jefffang19
 - create a note to explain math concept
