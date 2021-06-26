@@ -12,7 +12,8 @@ n_views
 
 ## SimCLR.info_nce_loss
 
-注意，是計算 loss，所以 model 已經給出 predictions，所以維度是 ```[batch * n_views, out_features]```
+注意，是計算 loss，所以 model 已經給出 predictions，維度是 ```[batch * n_views, out_features]```
+不過就算是 pretrain encoder，維度也可以是 ```[batch * n_views, C, H, W]```，畢竟不影響內積算 similarity
 
 ### labels
 ```python=
