@@ -1,5 +1,8 @@
 # Contrastive learning of global and local features for medical image segmentation with limited annotations
 
+[![hackmd-github-sync-badge](https://hackmd.io/UAhbq6IEQQGCWAahro0DLg/badge)](https://hackmd.io/UAhbq6IEQQGCWAahro0DLg)
+
+
 - NIPS 2020
 - [paper](https://arxiv.org/pdf/2006.10511)
 
@@ -35,16 +38,63 @@ Proposed Strategy $G$
     - 對於 $x_{s}^i$，第 $i$ 個 volume 的第 $s$ 個 partition 的某張 sample 到的 image，過完 augmentation 會有 pair $(\hat{x_{s}^i}, \tilde{x_{s}^i})$
     - 對於 pair $(\hat{x_{s}^i}, \tilde{x_{s}^i})$，它的 negative set 是![](https://i.imgur.com/FwjeLtb.png =250x) 
     - 意思是，所有 volume 除了第 $s$ 個 partition，其餘都是 negative
+    - 而 positive set，$(x_{s}^i, \hat{x_{s}^i}, \tilde{x_{s}^i})$ 兩兩抓都是 positive
     - 呼應前面作者提到，不同 volume 的相同 partition 大部分抓到都是同一個器官影像
 
 - $G^{D}$
-    - 對於不同 volume 但是來自相同 partion 的 image 應該要有相似的 representation，因為抓到的器官差不多
+    - 對於來自不同 volume 但是相同 partition 的 image 應該要有相似的 representations，因為抓到的器官差不多
     - partition-wise representation clusters
     - ![](https://i.imgur.com/FPgWLdR.png =400x)
     - 來自同一個 partition 的距離要越近，來自不同 partition 的距離要越遠
+    - positive set $(x_{s}^i, \hat{x_{s}^i}, \tilde{x_{s}^i})+(x_{s}^i, x_{s}^j)$ （這邊 $x_{s}^j$ augmentation 過後的不能算是 positve，我是感到有點疑惑）
     - negative set 的設計則跟 $G^{D-}$ 一樣
 
 ## Local Contrastive Loss
+
+Global contrastive loss 提供 image-level 的資訊，但是 segmentation 這類 pixel-level 的 prediction 會更需要 local representation 來區別 neighborhoods
+
+- 一個 encoder-decoder 的架構，用 global contrastive loss 來限制 encoder，用 local contrastive loss 來限制 decoder
+- 在第 $l$ 個 decoder block 接一個 projection head， 透過 local contrastive loss，使得這些 feature maps 有相似的 local regions 距離比較近，不相似的 local regions 距離比較遠
+    - 想當然作者這邊也要定義什麼是相似的 local region？什麼是不相似的 local region？
+- 對於一個 input image $x$，過兩種不同 transformations 後得到 $\hat{x}$ 和 $\tilde{x}$，過 encoder 到第 $l$ 個 decoder block，再過 projection head，會分別取得 $\hat{f}=g_{2}(d_{l}(e(\hat{x}))$ 和 $\tilde{f}=g_{2}(d_{l}(e(\tilde{x}))$
+    - $d_{l}(e(\hat{x}))$ 出來的 feature maps 維度是 $(W_{1}, W_{2}, C)$
+    - 首先把 feature maps 分成 $A$ 個 regions，每個 region 的維度是 $(K, K, C), K<min(W_{1}, W_{2})$
+    - 那 $\hat{x}$ 和 $\tilde{x}$ 同個位置的 region 相似，不同位置的 region 不相似
+    - ![](https://i.imgur.com/OxkIMzx.png =400x)
+    - 廣義來說，定義 global contrastive loss 時有定義 positive set，這邊原本說要是同一個 $x$ 的 pair $(\hat{x}, \tilde{x})$，其實不然，只要是 positive pair 就可以了
+    - ![](https://i.imgur.com/NgHrPlq.png)
+    - 特別註明這邊用到的 transformation 是只跟 ==intensity== 相關的
+
+Random Strategy $L_{R}$
+: 跟 random strategy global contrastive loss 一樣，從所有的 volumes 中 sample 出 $N$ 張 images，過 intensity transformations
+: positive pairs $(\hat{f}_{s}^i(u, v), \tilde{f}_{s}^i(u, v))$
+: negative pairs **在同個 feature maps $\hat{f}_{s}^i$, $\tilde{f}_{s}^i$ 的其他 regions**
+: 前面 global contrastive loss 多考慮不同 volumes 會有相似的 representation，local loss 這邊也可以再算一次不同 volumes 之間的相似 $({f}_{s}^i, {f}_{s}^j)$
+: 跟 global contrastive loss 不同的地方在於，local loss 的 postive 包含不同 transformed 版本 $(\hat{f}_{s}^i, \tilde{f}_{s}^j)$ 都可以視為 positive，原因我認為在於 contrastive learning 學習的是不同 intensity 的變化，而 global loss 的 transformation 會包含 random crop, flip 等等，會影響結構
+: 另外，雖然原論文沒有特別提到，不過他的 annotations 暗示了 local loss 的 positive 要是在同個 partitions。想想其實滿合理，要在 global 基礎下是相同的找 local 的 positive 跟 negative
+
+## Pretraining
+
+這篇論文的方法雖然可以 end-to-end 的 train，但是作者採用分階段一個一個 train 來避免要一個一個調校超參數
+
+1. 準備一個 encoder-decoder network，例如 UNet
+2. Pretrain unet.encoder
+    - encoder 接一個 projection head 用來計算 global contrastive loss
+    - transformations 包含 crop, flip, intensity, ...
+    - train 完後把外加的 projection head 丟掉
+3. Pretrain unet.decoder[$\ :l$]
+    - freeze unet.encoder
+    - unet.decoder 只取到第 $l$ 個 block 並外接一個 projection head
+    - 用 local contrastive loss 來 train 這 $l$ 個 blocks
+    - transformations 只跟 intensity 有關係
+    - train 完後把外加的 projection head 丟掉
+4. Finetune network
+    - 只用 segmentation loss 來 finetune 整個 network
+
+
+
+
+
 
 
 
