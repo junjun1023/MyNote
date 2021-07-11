@@ -1,5 +1,8 @@
 # 碩論
 
+[![hackmd-github-sync-badge](https://hackmd.io/j4YLFao6Tg6fXW60oV_suQ/badge)](https://hackmd.io/j4YLFao6Tg6fXW60oV_suQ)
+
+
 ## Todo
 
 ### NCKUH
