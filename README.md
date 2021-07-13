@@ -1,5 +1,6 @@
-# MyNote
+# Thesis
 
+=======
 ## Paper Notes
 - [A Gift from Knowledge Distillation: Fast Optimization, Network Minimization and Transfer Learning]()
 - [Densely Connected Convolutional Networks]()
@@ -19,3 +20,4 @@
 
 ## Codes Exploration
 - [SimCLR 拆解筆記]()
+
