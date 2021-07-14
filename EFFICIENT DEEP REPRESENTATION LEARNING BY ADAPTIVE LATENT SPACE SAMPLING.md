@@ -58,7 +58,7 @@
 
 - 藍色點是**實際存在**的 embedding，這個 embedding 是 datset 中某張 image 的
 - 橘色點是**不實際存在**的 embedding，這個 embedding 不是 dataset 中的任何一 image 的
-- 箭頭表示更新 sampling 的方向，從原本的 embedding 延箭頭方向更新會得到新的 embedding
+- 箭頭表示更新 sampling 的方向，從原本的 embedding (藍) 延箭頭方向更新會得到新的 embedding (橘)
 :::
 
 
