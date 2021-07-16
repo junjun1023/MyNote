@@ -16,7 +16,7 @@
 - 而當 down stream task 是 segmentation 之類的 task，model 透過 CL 學習到的 representation (embedding) 顯然無法直接用來做 segmentation
 - 所以 CL 可以視作 pretrain model 的一種手段，如上述，而這個 model 其實就是 encoder-decoder 架構中的 encoder
     - ![](https://i.imgur.com/Dl3F2sl.png =400x)
-- 為了能更好做 segmentation，本篇論文提出 ***Local Contrastive Loss*** 來 pretrain decoder
+- 此外，本篇論文提出 ***Local Contrastive Loss*** 來 pretrain decoder
 - 為了將 segmentation task 實現於將 3D medical image (e.g. MRI, CT)，作者也提出一些 sampling 的策略將 volumetric image 轉為 2D image
 
 
@@ -46,59 +46,77 @@
 
 本人才疏學淺理解為「一組 3D 影像的每個 slice 抓到的內容其實都差不多」，簡言之就是**因為同一個 volume 的 image 都很像，所以不打算每個 image 都用**
 
-於是作者採取兩種手段，其一是 random sampling，如下圖，有深色框的就是被 sample 到的 image
+於是作者採取兩種手段，其一是 random sampling，作者稱這種 sampling strategy 為 ***Random Strategy $G^R$***。如下圖，有深色框的就是被 sample 到的 image
 
 ![](https://i.imgur.com/6MExabm.png =400x)
 
 
 但如果希望每個 volume 都能被均勻的 sample 出特定張數，該怎麼做？
 
-很簡單，每個 volume 都切成 $S$ 份，每份 sample 一張
+很簡單，每個 volume 都切成 $S$ 份（partition），每份 sample 一張。這個做法很聰明，因為每組 3D 影像的++張數++其實都不一樣，很好地確保了每組 3D 影像中得到的 2D images 數量是一樣的
 
 ![](https://i.imgur.com/mbcjiDl.png =400x)
+
+:::success
+Annotation
+
+$x_{s}^i$：第 $i$ 個 volume 的第 $s$ 個 partition 的那張被 sample 到的 image
+:::
 
 到目前為止，就成功從 3D 影像取得 2D image input data 了
 
 
 ## Global Contrastive Loss
 
-- 一般熟知的 contrastive loss 是
-    - ![](https://i.imgur.com/RSogV2f.png)
-    - 對於同一個 image $x$ 做兩種不同 augmentations 得到 $\hat{x}$ 和 $\tilde{x}$
-    - 同一個 $x$ 的 embedding 距離越近，不同 $x$ 的 embedding 距離越遠
-    - 作者稱呼這種，**隨機**抓兩個不同的 image 計算 positive 和 negative 為 **Random Strategy**
-- 作者結合 3D 影像（如：CT, MRI）重新定義了 positive set 和 negative set
-    - 結合 domain and problem specific knowledge 可能可以更好的幫助 CL 
-    - 利用 domain-specific knowledge 提供 ==global cue== 來學習 volumetric medical images
-    - 利用 problem-specific knowledge 提供 ==local cue== 來學習 segmentation
-- 假設有 $M$ 個 volumes，每個 volume 由 $Q$ 張 images 組成，把每個 volume 切成 $S$ 個 partitions，每個 partitions 有 $D$ 張 images
-    - 一個 volume 可以理解成一組 3D 影像，一組 CT 影像
-    - 第 $i$ 個 volume 的==第 $s$ 個 partition== 寫作 $x_{s}^i$
-    - 不同 volumes 的同一個 partition 可以視為抓到同一個 anatomical area，每個 volume 都是某個病人的一組 CT 影像，簡單來說就是每個人的器官都長得差不多
-    - 所以在 training CL 時，$x_{s}^i = x_{s}^j$
+解決 input data 的問題後，正式進入第一階段：pretrain encdoer with glocal contrastive loss
 
-Random Strategy $G^{R}$
-: 隨機從所有 volumes 中 sample 出 $N$ 張 images 形成一個 mini-batch
+這部分其實不難理解，就是一般我們熟悉的 contrastive loss，讓同個 image source 的 embeddings 距離越近越好，讓不同 image source 的 embeddings 距離越遠越好
 
-Proposed Strategy $G$
-: 基於 $G^R$，計算不同 volume 的 partition 的 similarity
-: 先 sample 出 $m$ 個 volumes，$m<M$，對於這 $m$ 個 sample 出的 volume，從每一個 partition 中 sample 出一張 image
-: 也就是會有 $m\times S$ 張（$m$ 個 volumes, $S$ 個 partition）
+- ![](https://i.imgur.com/Dl3F2sl.png =400x)
+- ![](https://i.imgur.com/RSogV2f.png)
+
+:::success
+Annotations
+
+$x$：image
+
+$(\hat{x}, \tilde{x})$：image 過兩種不同的 transformation
+
+$e(\hat{x})$：transformed image 過 encoder
+
+$g$：projection head
+
+$g(e(\hat{x}))$：embedding 過 projection head，map 到 normalized space 得到 $\hat{z}$
+
+$e^{sim(\hat{z}, \tilde{z})}$：$\hat{z}, \tilde{z}$ 的相似度取 exponential
+:::
+
+
+這邊補充一個作者提到的觀點
+> Corresponding partitions in different volumes can be considered to capture similar anatomical areas
+
+簡單來說，不同的 volume 的同個 partition 抓到的東西都是相似的，強制讓相似的 image embedding 不相似是不合理的，如果不加思索直接套用 contrastive loss，可能會影響 model 的 performance，所以作者重新定義 *positive set* 和 *negative set*
+
+
+![](https://i.imgur.com/TIHPchH.png)
+
 
 - $G^{D-}$
-    - 對於 $x_{s}^i$，第 $i$ 個 volume 的第 $s$ 個 partition 的某張 sample 到的 image，過完 augmentation 會有 pair $(\hat{x_{s}^i}, \tilde{x_{s}^i})$
-    - 對於 pair $(\hat{x_{s}^i}, \tilde{x_{s}^i})$，它的 negative set 是![](https://i.imgur.com/FwjeLtb.png =250x) 
-    - 意思是，所有 volume 除了第 $s$ 個 partition，其餘都是 negative
-    - 而 positive set，$(x_{s}^i, \hat{x_{s}^i}, \tilde{x_{s}^i})$ 兩兩抓都是 positive
-    - 呼應前面作者提到，不同 volume 的相同 partition 大部分抓到都是同一個器官影像
+    - positive：same image source
+    - negative：不同 partition 的 image
+    - ![](https://i.imgur.com/8bSNetV.png =200x) （紅色虛線表示 negative）
 
 - $G^{D}$
-    - 對於來自不同 volume 但是相同 partition 的 image 應該要有相似的 representations，因為抓到的器官差不多
-    - partition-wise representation clusters
-    - ![](https://i.imgur.com/FPgWLdR.png =400x)
-    - 來自同一個 partition 的距離要越近，來自不同 partition 的距離要越遠
-    - positive set $(x_{s}^i, \hat{x_{s}^i}, \tilde{x_{s}^i})+(x_{s}^i, x_{s}^j)$ （這邊 $x_{s}^j$ augmentation 過後的不能算是 positve，我猜測是因為這邊做的 augmentation 有 crop 之類的）
-    - negative set 的設計則跟 $G^{D-}$ 一樣
+    - positive
+        - same image source
+        - 來自同個 partition 的 image
+    - negative：不同 partition 的 image
+    - ![](https://i.imgur.com/i72HNL7.png =200x) （綠色實線表示 positive，紅色虛線表示 negative）
+ 
+下圖是論文中的對 global contrastive learning $G^{D}$ 的示意圖，annotation 前面講過了就不贅述
+![](https://i.imgur.com/kbZDDH1.png)
+
+
 
 ## Local Contrastive Loss
 
