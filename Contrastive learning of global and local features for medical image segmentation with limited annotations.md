@@ -78,17 +78,13 @@ $x_{s}^i$：第 $i$ 個 volume 的第 $s$ 個 partition 的那張被 sample 到�
 :::success
 Annotations
 
-$x$：image
-
-$(\hat{x}, \tilde{x})$：image 過兩種不同的 transformation
-
-$e(\hat{x})$：transformed image 過 encoder
-
-$g$：projection head
-
-$g(e(\hat{x}))$：embedding 過 projection head，map 到 normalized space 得到 $\hat{z}$
-
-$e^{sim(\hat{z}, \tilde{z})}$：$\hat{z}, \tilde{z}$ 的相似度取 exponential
+- $x$：image
+- $(\hat{x}, \tilde{x})$：image 過兩種不同的 transformation
+- $e(\hat{x})$：transformed image 過 encoder
+- $g$：projection head
+- $g(e(\hat{x}))$：embedding 過 projection head，map 到 normalized space 得到 $\hat{z}$
+- $e^{sim(\hat{z}, \tilde{z})}$：$\hat{z}, \tilde{z}$ 的相似度取 exponential
+- 這階段的 augmentations 沒有什麼限制
 :::
 
 
@@ -101,18 +97,21 @@ $e^{sim(\hat{z}, \tilde{z})}$：$\hat{z}, \tilde{z}$ 的相似度取 exponential
 ![](https://i.imgur.com/TIHPchH.png)
 
 
-- $G^{D-}$
-    - positive：same image source
-    - negative：不同 partition 的 image
-    - ![](https://i.imgur.com/8bSNetV.png =200x) （紅色虛線表示 negative）
+### $G^{D-}$
+- positive：same image source
+- negative：不同 partition 的 image
+- ![](https://i.imgur.com/8bSNetV.png =200x) （紅色虛線表示 negative）
 
-- $G^{D}$
-    - positive
-        - same image source
-        - 來自同個 partition 的 image
-    - negative：不同 partition 的 image
-    - ![](https://i.imgur.com/i72HNL7.png =200x) （綠色實線表示 positive，紅色虛線表示 negative）
- 
+### $G^{D}$
+- positive
+    - same image source
+    - 來自同個 partition 的 image
+- negative：不同 partition 的 image
+- ![](https://i.imgur.com/i72HNL7.png =200x) （綠色實線表示 positive，紅色虛線表示 negative）
+
+### Global Contrastive Diagram
+
+
 下圖是論文中的對 global contrastive learning $G^{D}$ 的示意圖，annotation 前面講過了就不贅述
 ![](https://i.imgur.com/kbZDDH1.png)
 
@@ -120,51 +119,44 @@ $e^{sim(\hat{z}, \tilde{z})}$：$\hat{z}, \tilde{z}$ 的相似度取 exponential
 
 ## Local Contrastive Loss
 
-Global contrastive loss 提供 image-level 的資訊，但是 segmentation 這類 pixel-level 的 prediction 會更需要 local representation 來區別 neighborhoods
+Global contrastive loss 提供 image-level 的資訊，但是 segmentation 這類 pixel-level 的 prediction 需要 local 的資訊，所以作者提出 **Local Contrastive Loss** 來 pretrain decoder
 
-- 一個 encoder-decoder 的架構，用 global contrastive loss 來限制 encoder，用 local contrastive loss 來限制 decoder
-- 在第 $l$ 個 decoder block 接一個 projection head， 透過 local contrastive loss，使得這些 feature maps 有相似的 local regions 距離比較近，不相似的 local regions 距離比較遠
-    - 想當然作者這邊也要定義什麼是相似的 local region？什麼是不相似的 local region？
-- 對於一個 input image $x$，過兩種不同 transformations 後得到 $\hat{x}$ 和 $\tilde{x}$，過 encoder 到第 $l$ 個 decoder block，再過 projection head，會分別取得 $\hat{f}=g_{2}(d_{l}(e(\hat{x}))$ 和 $\tilde{f}=g_{2}(d_{l}(e(\tilde{x}))$
-    - $d_{l}(e(\hat{x}))$ 出來的 feature maps 維度是 $(W_{1}, W_{2}, C)$
-    - 首先把 feature maps 分成 $A$ 個 regions，每個 region 的維度是 $(K, K, C), K<min(W_{1}, W_{2})$
-    - 那 $\hat{x}$ 和 $\tilde{x}$ 同個位置的 region 相似，不同位置的 region 不相似
-    - ![](https://i.imgur.com/OxkIMzx.png =400x)
-    - 廣義來說，定義 global contrastive loss 時有定義 positive set，這邊原本說要是同一個 $x$ 的 pair $(\hat{x}, \tilde{x})$，其實不然，只要是 positive pair 就可以了
-    - ![](https://i.imgur.com/NgHrPlq.png)
-    - 特別註明這邊用到的 transformation 是只跟 ==intensity== 相關的
+這邊稍微提一下，decoder 的架構其實是由多個 decoder blocks 組成，要 pretrain 的不是一整個 decoder，而是前 $l$ 個 decoder blocks；另外，在 pretrain decoder blocks 的時候，要固定 encoder 的參數；這個階段的 augmentations 限制在 intensity augmentations
 
-Random Strategy $L_{R}$
-: 跟 random strategy global contrastive loss 一樣，從所有的 volumes 中 sample 出 $N$ 張 images，過 intensity transformations
-: positive pairs $(\hat{f}_{s}^i(u, v), \tilde{f}_{s}^i(u, v))$
-: negative pairs **在同個 feature maps $\hat{f}_{s}^i$, $\tilde{f}_{s}^i$ 的其他 regions**
-: 前面 global contrastive loss 多考慮不同 volumes 會有相似的 representation，local loss 這邊也可以再算一次不同 volumes 之間的相似 $({f}_{s}^i, {f}_{s}^j)$
-: 跟 global contrastive loss 不同的地方在於，local loss 的 postive 包含不同 transformed 版本 $(\hat{f}_{s}^i, \tilde{f}_{s}^j)$ 都可以視為 positive，原因我認為在於 contrastive learning 學習的是不同 intensity 的變化，而 global loss 的 transformation 會包含 random crop, flip 等等，會影響結構
-: 另外，雖然原論文沒有特別提到，不過他的 annotations 暗示了 local loss 的 positive 要是在同個 partitions。想想其實滿合理，要在 global 基礎下是相同的找 local 的 positive 跟 negative
+local contrastive 的概念來自一張 image 內部的 pixel-pixel contrastive，也就是「位置」的對比。同一張 image 做了兩種不同 intensity augmentations，兩張 images 相同位置的 pixel (patch) 是 positive，不同位置的 pixel (patch) 是 negative
 
-## Pretraining
+![](https://i.imgur.com/FpBRkUT.png =300x)
 
-這篇論文的方法雖然可以 end-to-end 的 train，但是作者採用分階段一個一個 train 來避免要一個一個調校超參數
+因為是 pretrain $l$ 個 decoder blocks，所以是用 feature maps 來計算 local contrastive loss，以上方示意圖為例，假設 feature maps 的維度是 $(C, H, W)$，對著 $H, W$ 切後取得 **位置（region）**
+的 embedding $(C, K, K)$
 
-1. 準備一個 encoder-decoder network，例如 UNet
-2. Pretrain unet.encoder
-    - encoder 接一個 projection head 用來計算 global contrastive loss
-    - transformations 包含 crop, flip, intensity, ...
-    - train 完後把外加的 projection head 丟掉
-3. Pretrain unet.decoder[$\ :l$]
-    - freeze unet.encoder
-    - unet.decoder 只取到第 $l$ 個 block 並外接一個 projection head
-    - 用 local contrastive loss 來 train 這 $l$ 個 blocks
-    - transformations 只跟 intensity 有關係
-    - train 完後把外加的 projection head 丟掉
-4. Finetune network
-    - 只用 segmentation loss 來 finetune 整個 network
+因為前述提及，不同 volume 的同個 partition 抓到的內容差不多，所以作者在 local contrastive 也有再定義 *positive set* 和 *negative set*
+
+![](https://i.imgur.com/SszAmWo.png =500x)
+
+### Random Strategy
+- positive：同個 image source 的==相同 region==
+- negative：同個 image source 的==不同 region==
+- ![](https://i.imgur.com/l4MfcDw.png =250x)
+
+
+### $L^D$
+- positive：同個 partition 的相同 region
+- negative：同個 partition 的不同 region
+- ![](https://i.imgur.com/BFzyR1e.png =250x)
+
+
+### Local Contrastive Diagram
+
+下圖是論文中的對 local contrastive loss 的示意圖
+
+![](https://i.imgur.com/lSFboqX.png)
 
 
 
+# My Conclusions
 
-
-
+我個人覺得 local contrastive 的概念很厲害，可能可以往 X-ray 影像有哪些 local 的 feature 去 study
 
 
 ###### tags: `contrastive learning`, `segmentation`, `volumetric image`
