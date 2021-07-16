@@ -4,10 +4,61 @@
 
 
 - NIPS 2020
-- [paper](https://arxiv.org/pdf/2006.10511)
+- [arxiv](https://arxiv.org/pdf/2006.10511), [NIPS 2020](https://proceedings.neurips.cc/paper/2020/file/949686ecef4ee20a62d16b4a2d7ccca3-Paper.pdf)
+- [Github](https://github.com/krishnabits001/domain_specific_cl)
 
 
-# Methods
+# Overview
+
+- 一般熟悉 Contrastive Loss 的概念是「一張 image 做兩種不同的 transformations (augmentation)，得到的兩張 images 的 embeddings，他們的**距離 (相似度) 要越近越好**；不同的 images，embedding 的距離 (相似度) 要越遠越好
+    - ![](https://i.imgur.com/dPSWhMO.png =300x)
+- 因為是拿「同一張 image 和不同張 images」做 contrastive（對比），model 學習到的是 global (image-level) 的概念
+- 而當 down stream task 是 segmentation 之類的 task，model 透過 CL 學習到的 representation (embedding) 顯然無法直接用來做 segmentation
+- 所以 CL 可以視作 pretrain model 的一種手段，如上述，而這個 model 其實就是 encoder-decoder 架構中的 encoder
+    - ![](https://i.imgur.com/Dl3F2sl.png =400x)
+- 為了能更好做 segmentation，本篇論文提出 ***Local Contrastive Loss*** 來 pretrain decoder
+- 為了將 segmentation task 實現於將 3D medical image (e.g. MRI, CT)，作者也提出一些 sampling 的策略將 volumetric image 轉為 2D image
+
+
+
+# Methodology
+
+本篇方法共有兩種 contrastive loss，分別是 global contrastive loss 和 local contrastive loss，這兩種 loss 可以一起用來 pretrain model，但是為免調參需求，作者採用階段式訓練：
+
+1. pretrain encoder with global contrastive loss
+2. pretrain decoder with local contrastive loss
+3. fine-tuning model (encoder-decoder) with segmentation loss
+
+因為 contrative 的概念很著重於 *positive set* 和 *negative set*，應用於 volumetric image，作者在不同的 stage 提出不同 *positive set* 和 *negative set* 的策略
+
+為了方便理解，下文敘述也是分階段式，可以對應作者的 stage
+
+## Volumetric to Image
+
+首先，將 3D 影像 (volume) 轉成 2D image (slice)，最為直觀的方法是，直接將 volume 切成很多個 slices，就可以當成 input data 丟給 segmentation model
+
+![](https://i.imgur.com/1WNSbgM.png =300x)
+
+
+
+不過論文中，作者提到
+> Volumetric images of the same anatomical region for different subjects have similar content
+
+本人才疏學淺理解為「一組 3D 影像的每個 slice 抓到的內容其實都差不多」，簡言之就是**因為同一個 volume 的 image 都很像，所以不打算每個 image 都用**
+
+於是作者採取兩種手段，其一是 random sampling，如下圖，有深色框的就是被 sample 到的 image
+
+![](https://i.imgur.com/6MExabm.png =400x)
+
+
+但如果希望每個 volume 都能被均勻的 sample 出特定張數，該怎麼做？
+
+很簡單，每個 volume 都切成 $S$ 份，每份 sample 一張
+
+![](https://i.imgur.com/mbcjiDl.png =400x)
+
+到目前為止，就成功從 3D 影像取得 2D image input data 了
+
 
 ## Global Contrastive Loss
 
@@ -46,7 +97,7 @@ Proposed Strategy $G$
     - partition-wise representation clusters
     - ![](https://i.imgur.com/FPgWLdR.png =400x)
     - 來自同一個 partition 的距離要越近，來自不同 partition 的距離要越遠
-    - positive set $(x_{s}^i, \hat{x_{s}^i}, \tilde{x_{s}^i})+(x_{s}^i, x_{s}^j)$ （這邊 $x_{s}^j$ augmentation 過後的不能算是 positve，我是感到有點疑惑）
+    - positive set $(x_{s}^i, \hat{x_{s}^i}, \tilde{x_{s}^i})+(x_{s}^i, x_{s}^j)$ （這邊 $x_{s}^j$ augmentation 過後的不能算是 positve，我猜測是因為這邊做的 augmentation 有 crop 之類的）
     - negative set 的設計則跟 $G^{D-}$ 一樣
 
 ## Local Contrastive Loss
@@ -98,3 +149,4 @@ Random Strategy $L_{R}$
 
 
 
+###### tags: `contrastive learning`, `segmentation`, `volumetric image`
