@@ -60,6 +60,17 @@ Annotations
 
 透過 k-means 分 $M$ 群後找到該群的 prototype $c$，當 embedding 屬於 prototype $c_i$ 的 cluster，則 embedding 越靠近 prototype $c_i$，當 embedding 不屬於 prototype $c_j$ 的 cluster，則 embedding 越遠離 $c_j$
 
+
+$\phi=\frac{\sum_{z=1}^{Z}\left\|v_{z}^{\prime}-c\right\|_{2}}{Z \log (Z+\alpha)}$
+
+:::success
+Annotations
+- $z$ : 某個 cluster 的 feature points，一個 cluster 共有 $Z$ 個 feature points
+:::
+
+透過 $\phi$ 描述一個 cluster 有多集中，$\phi$ 越小越集中，越大越不集中
+
+
 ## $\mathcal{L}_{\text {ProtoNCE }}$
 
 這個概念其實不太需要數學推導，還算好想像，下面來看完整的 $\mathcal{L}_{\text {ProtoNCE }}$
@@ -76,6 +87,16 @@ $\mathcal{L}_{\text {ProtoNCE }}=\sum_{i=1}^{n}-\left(\log \frac{\exp \left(v_{i
 ## 數學推導
 
 
+- 待補
+
+
+
+# Results
+
+Appendix Figure 6.
+: 綠色框的圖片是從 $K=100k$ 程度的 cluster 取的，橘色框的圖片是從 $K=50k$ 程度的 cluster 取的，$K$ 代表有 $K$ 個 clusters
+
+![](https://i.imgur.com/kUbrnvV.png =400x)
 
 
 
