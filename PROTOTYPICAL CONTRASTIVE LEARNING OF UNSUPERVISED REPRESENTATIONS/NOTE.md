@@ -11,7 +11,7 @@
 
 - Instance discrimination tasks 包含 1. image transformation 2. contrastive loss 兩個要素（我看起來就是 contrastive learning）
 - 現有 instance discrimination 的方法大都有同一個缺點：缺乏 semantic 的資訊
-    - ![](https://i.imgur.com/U5ATGQV.png =200x)
+    - <img src="fig1%20illustration.png" alt="fig 1. illustration" width="200">
     - 如上圖，類別 ground-truth label 是馬，但是其實可以再細分為「包含人的馬」跟「不包含人的馬」，而「包含人的馬」的所有影像的 embedding 距離應該要相對更近一些（相似度相對更高）；但如果是一般的 instance discrimination，只在意類別為馬的所有影像 embedding 距離是否都足夠靠近
     - [Supervised Contrastive Learning]() 就透過 label 的 samantic 來限制 embedding 距離遠近，不過是 supervised，反倒浪費了 CL 不需要 label 的特性
 - 本篇架構有 encoder 和 momentum encoder
@@ -22,7 +22,7 @@
 
 # Methodology
 
-![](https://i.imgur.com/8Pocnbe.png)
+<img src="fig2%20framework%20overview.png" alt="fig 2. framework overview" width="400">
 
 1. 透過 momentum encoder 取得 embeddings
 2. 用 k-means 分群（clustering），分別計算各 cluster 的 centroid 後
@@ -96,9 +96,7 @@ $\mathcal{L}_{\text {ProtoNCE }}=\sum_{i=1}^{n}-\left(\log \frac{\exp \left(v_{i
 Appendix Figure 6.
 : 綠色框的圖片是從 $K=100k$ 程度的 cluster 取的，橘色框的圖片是從 $K=50k$ 程度的 cluster 取的，$K$ 代表有 $K$ 個 clusters
 
-![](https://i.imgur.com/kUbrnvV.png =400x)
-
-
+<img src="fig6.PNG" alt="fig 6. results" width="300">
 
 ---
 
