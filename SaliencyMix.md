@@ -1,14 +1,15 @@
 # SaliencyMix: A Saliency Guided Data Augmentation Strategy for Better Regularization
 
-###### tags: `Data Augmentation` `Regulization` `Domain Adaptation` `Domain Generalization`
+[![hackmd-github-sync-badge](https://hackmd.io/4fITi2WvQESPt7w_wLQzTA/badge)](https://hackmd.io/4fITi2WvQESPt7w_wLQzTA)
 
-- Accepted to ICLR 2021
+
+
+- ICLR 2021
 - [Github](https://github.com/SaliencyMix/SaliencyMix)
-- [paper](https://openreview.net/pdf?id=-M0QkvBGTTq)
-- [HackMD](https://hackmd.io/@lEHmUoFNSfOem4UTt7O44g/rkR_05ftO)
+- [arxiv](https://openreview.net/pdf?id=-M0QkvBGTTq)
 
 ---
-## Motivation
+# Overview
 - Data augmentation 能讓 model 更 generalized(泛化)，使 model 更 robust
 - 像 `CutMix` 這類的 aug，隨機切下影像的 patch 後，像貼補丁一樣把 patch 和另一張影像混合，並依照面積比例來給 label
     - 保留 regional dropout 的優勢，強迫 model 學習 non-discriminative 的部分
@@ -18,15 +19,15 @@
 - 本篇論文提出 ***SaliencyMix***，透過 saliency map 選出比較具有 information 的 patch，再補丁到 target image
 
 ---
-## Methods
+# Methodology
 
-### Scheme
+## Scheme
 ![](https://i.imgur.com/bwNWquX.png)
 
 這篇論文的方法真的很簡單，就連取得 saliency map 也只需要兩行 code 就能解決，直接 call cv2 的內建 function 就好，
 簡單說明一下這篇論文用到的 annotations
 
-### Selection of the source patch
+## Selection of the source patch
 ```python=
 saliency = cv2.saliency.StaticSaliencyFineGrained_create()
 (success, saliencyMap) = saliency.computeSaliency(source_img)
@@ -56,7 +57,7 @@ bby2 = np.clip(j + cut_h // 2, 0, H)
 
 嘛不過實際應用上，所謂的 crop 其實只是在一個跟 source image 同樣大小的 mask $M$ 上，把要 crop 的部分設為 1，其他設為 0
 
-### Mixing the patches and labels
+## Mixing the patches and labels
 
 $I_a = M ⊙ I_s + M′ ⊙ I_t$
 : 根據 crop mask $M$ 把 source image 和 target image 相加，得到 augmented image
@@ -65,28 +66,10 @@ $y_a = λy_t + (1 − λ)y_s$
 : 最後的 label 是 source image label 和 target image label 的 weigted sum
 : 這篇論文把這種 label 稱為 ==smooth label==，包含 $\lambda$ 比例的 source image 和 $1-\lambda$ 比例的 target image
 
-## Experiments
-
-###### Table 1
-![](https://i.imgur.com/PZQ27Q3.png)
-
-###### Table 2
-![](https://i.imgur.com/c26tau6.png)
-
-###### Table 3
-![](https://i.imgur.com/3RXLCEX.png)
-
-
-![](https://i.imgur.com/XwAtw0H.jpg)
-
-
-![](https://i.imgur.com/861mZAW.png)
-
-
-## Conclusions
+# My Conclusions
 
 1. 既然這種方法可以做在 raw input 上，那理論上也可以做在 feature map 上，而且還不需要過 opencv 的 function，直接取 feature map 的 maximum 的 index 就好
 2. 有一定的可能性會把 target image 的 foreground 通通都遮住，按照本篇論文的說法，這也可能會誤導 model 的學習
 
 
-
+###### tags: `Data Augmentation` `Regulization` `Domain Adaptation` `Domain Generalization`
