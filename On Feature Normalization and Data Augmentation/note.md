@@ -21,7 +21,7 @@
 - 在 image recognition (classification) task 中，latent feature 的 $\mu$, $\sigma$ 被視為 noise，需要透過 batch_norm 移除；但是 image generation task，latent feature 的 $\mu$, $\sigma$ 是一種 feature
     - 例如，下圖 1. 透過 postion normalization 得到 ResNet-18 第一個 layer 的 $\mu$, $\sigma$，仍舊可以透過 $\mu$, $\sigma$ 來預測 class 的類別
         1. ![](https://i.imgur.com/L31Cmop.png =250x)
-        2. ![](https://i.imgur.com/O2F1lIM.gif =150x) (positional normalization 示意圖不包含 Batch，維度 C, H, W)
+        2. ![](https://i.imgur.com/EPLDNxs.gif)
     - 比較下表中 classification task 的 error rate，單純從 moments 來做分類 (PONO moments, 紅色) 已經比隨機亂猜 (Random Baseline, 灰色) 來得更好。如果把 moments 移掉 (PONO normalized, 藍色)，結果會比標準的 PONO (綠色) 還要更爛，所以 moments 其實是重要的 feature
         - ![](https://i.imgur.com/qUFjuRx.png =400x)
 - 本篇論文的方法基於 positional normalization，既然 moments 代表 shape 和 style，那只要交換 moments 就能限制模型同時學習 a instance 的 feature dist 和 b instance 的 moments
@@ -90,4 +90,4 @@ Intra-instance normalization 有很多種 (IN, GN, LN)，作者也有做相關�
 
 
 # My Conclusions
-- 我真的覺得這篇的作法跟 [DOMAIN GENERALIZATION WITH MIXSTYLE](https://arxiv.org/abs/2104.02008) 超級像，原則上是一模一樣，只是切入的角度有一點不同，然後投在不同的 conference 上
+- 我真的覺得這篇的作法跟 [DOMAIN GENERALIZATION WITH MIXSTYLE](https://arxiv.org/abs/2104.02008) 超級像，原則上是一模一樣，只是切入的角度有一點不同，投稿在不同的 conference 上
