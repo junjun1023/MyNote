@@ -45,8 +45,18 @@ RetinaNet 的任務是物件偵測，事先定義好 anchor，每個 anchor 具�
 
 ## OXnet
 
+因為本篇論文對我來說有點繞，所以我做了影片來表示整個模型設計的架構，觀看影片可以更清楚知道模型的流程，文字敘述的部分我會用影片的截圖來說明
+
+### Global Attention Head
+
+{%youtube IUodqnEHYv8 %}
+
+---
 
 
+### Dual Attention Alignment
+
+{%youtube H4tz7fkpIe8 %}
 
 
 
