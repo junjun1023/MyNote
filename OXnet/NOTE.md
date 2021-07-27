@@ -1,4 +1,4 @@
-# OXnet: Deep Omni-supervised Thoracic Disease Detection from Chest X-rays
+# [筆記] OXnet: Deep Omni-supervised Thoracic Disease Detection from Chest X-rays
 
 [![hackmd-github-sync-badge](https://hackmd.io/h7qG-v_dRceW6mCQwRjk5A/badge)](https://hackmd.io/h7qG-v_dRceW6mCQwRjk5A)
 
@@ -29,9 +29,9 @@
 
 正式開始進入論文的方法前，先來回憶一下 RetinaNet
 
-使用 FPN 的架構，透過 lateral connection 讓 model 具有更全面的 receptive field，並且在 decoder 不同大小的層上都接出去兩個分支。
+使用 FPN 的架構，透過 lateral connection 讓 model 具有更全面的 receptive field，並且在 decoder 不同大小的層上都接出去兩個子網路 (subnet)。
 
-RetinaNet 的任務是物件偵測，事先定義好 anchor，每個 anchor 具有類別 (class) 和偏移量 (offset) 兩個屬性， decoder 接出去的兩個分支各別對應 class 和 offset
+RetinaNet 的任務是物件偵測，事先定義好 anchor，每個 anchor 具有類別 (class) 和偏移量 (offset) 兩個屬性， decoder 接出去的兩個 subnets 各別對應 class 和 offset
 
 ### Class Subnet
 
@@ -56,7 +56,7 @@ RetinaNet 的任務是物件偵測，事先定義好 anchor，每個 anchor 具�
 
 ### Dual Attention Alignment
 
-{%youtube H4tz7fkpIe8 %}
+{%youtube eJLr__iun20 %}
 
 
 
