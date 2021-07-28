@@ -5,7 +5,7 @@
 
 - MICCAI 2021
 - [arxiv](https://arxiv.org/abs/2104.03218)
-- [Github](https://github.com/LLYXC/OXnet) (專案目前只有 readme....)
+- [Github](https://github.com/LLYXC/OXnet) (專案目前只有 readme，作者表示還在整理 code)
 
 
 ---
@@ -53,14 +53,137 @@ RetinaNet 的任務是物件偵測，事先定義好 anchor，每個 anchor 具�
 
 ---
 
+#### Global Attention Head
+
+![](https://i.imgur.com/ypSPRtf.png)
+
+
+RetinaNet 可以拆成 encoder 和 decoder 兩個部分，而所謂的 global attention head 其實就是直接用 encoder 的輸出 feature 做分類
+
+具體實作也很簡單，就是把 feature 透過 1x1 convolution 降維到 class 數量 (RetinaNet 每個 layer 的 channel 數都是 256)，這邊假設有 5 個 classes
+
+```python=
+global_attention = nn.Conv2d(in_channel=256, out_channel=5, kernel_size=1)
+```
+
+再透過 global average pooling 把 $(H, W, 5)$ 的 $global\ attention\ \mathcal{X}$ 降低 spatial size 到 $(1, 1, 5)$，也就是對每個 class 的 $(H, W)$ 取 maximum
+
+最後過 activation function 得到模型的 prediction
+
+之所以是 global attention 是因為 encoder 最後一層 feature 的 receptive field 比較全局，所以稱為 global
+
+
+
+![](https://i.imgur.com/M02tqdg.png =400x)
+
+(a) ground-truth (b) global attention
+
+這邊直接把 global attention $\mathcal{X}$ 畫出來看，可以發現單純使用 global attention，模型關注的位置非常不合理，又因為 RetinaNet 的 decoder 其實可以得到更 local 的資訊，所以作者也加入 local attention
+
+
+---
+
 
 ### Dual Attention Alignment
 
-{%youtube eJLr__iun20 %}
+{%youtube 8rIS-z5ag38 %}
+
+
+---
+
+#### Local Attention
+![](https://i.imgur.com/KdStERx.png)
+
+
+RetinaNet decoder 的 class subnet 會輸出 $(W, H, K * A)$ 維度的 feature maps，每個 class 會有 A 個 feature maps，共有 K 個 class
+
+這步驟是對著每個 class 的 A 個 feature maps 的每個 position 取 max
+
+==p.s. 這篇筆記以及原論文中，所有有下標 $_c$ 的 annotation 都代表某個 class==
+
+![](https://i.imgur.com/cQJsRiD.png =200x)
+
+(a) ground-truth (c) local attention
+
+直接把取完 max 的 local attention 拿來看，可以看到模型確實 focus 在更合理的範圍
+
+不過 global attention 的好處是可以有更全局的 receptive field，作者提出結合 global attention 和 local attention 的 dual attention alignment
+
+接下來的說明都假設一個情境：
+1. classes = 5
+2. batch size = 4
+3. global attention 的 $(W, H)=(3, 3)$
+4. local attention 的 $(W, H)=(5, 5)$
+
+
+#### Dual Attention Alignment
+
+Dual attention alignment 的概念不困難，結合 global attention 和 local attention，所以只要把兩者 element-wise 相乘即可，見下圖
+
+
+![](https://i.imgur.com/BHilERR.png)
+
+但是因為 local attention 的 spatial size 和 global attention 的 spatial size 不一樣，所以需要先 resize local attention
+
+除了 resize，作者還將 local attention 的每個數值都除以 local attention 的總和，好讓整個 local attention 的總和為 $1$，這步驟的目的是為了好讓接下來的 element-wise multiplication 能具有 multiple instance learning 中的 pooling 的效果
+
+![](https://i.imgur.com/ufT8kaw.png)
+
+兩者 element-wise 相乘後的維度是 $(3, 3, 5)$，其實到這個步驟就已經是 dual attention alignment 了，不過為了能 classify，所以透過將 
+$3*3$ 個 feature vectors 的加總，得到 $(1, 1, 5)$ 的 feature vector
+
+這條 feature vector 再過 activation function 得到 classification prediction
+
+![](https://i.imgur.com/WRwhokx.png)
+
+到目前為止的整體示意圖如下
+
+![](https://i.imgur.com/QhqTfDm.png)
+
+
+---
+
+那其實有了 DAA (dual attention alignment) 後，所有在 global 包含的資訊都可以和 local 做結合，所以作者結合 multi-label metric learning 讓 encoder 能學得更好
+
+也就是藉由 prototype learning，讓同個 class 的 feature 更近，不同 class 的 feature 更遠
+
+
+### Category-specific Feature
+
+{%youtube 2P7sHqD9FCk %}
+
+
+---
+
+
+
+![](https://i.imgur.com/XH5LHFT.png)
 
 
 
 
+![](https://i.imgur.com/9Wz7qGn.png)
+
+![](https://i.imgur.com/SP4B2yi.png)
+
+
+![](https://i.imgur.com/tFPwI76.png)
+
+
+![](https://i.imgur.com/T2v5mgU.png)
 
 
 
+### Global Prototype Alignment
+
+{%youtube _lKAT_2DDAw %}
+
+
+![](https://i.imgur.com/WgPTb0G.png)
+
+
+![](https://i.imgur.com/gIOUo4g.png)
+
+![](https://i.imgur.com/p7pmduA.png)
+
+![](https://i.imgur.com/zaqm7pT.png)
