@@ -143,9 +143,15 @@ $3*3$ 個 feature vectors 的加總，得到 $(1, 1, 5)$ 的 feature vector
 
 ---
 
-那其實有了 DAA (dual attention alignment) 後，所有在 global 包含的資訊都可以和 local 做結合，所以作者結合 multi-label metric learning 讓 encoder 能學得更好
+那有了 DAA (dual attention alignment) 後，所有在 global 包含的資訊都可以和 local 做結合，所以作者結合 multi-label metric learning 讓 encoder 能學得更好
 
-也就是藉由 prototype learning，讓同個 class 的 feature 更近，不同 class 的 feature 更遠
+藉由 prototype learning，讓同個 class 的 feature 距離較近，不同 class 的 feature 距離較遠，算是一種 cluster 的概念，prototype learning 的目標是找到每個 cluster 的模板 (原型，prototype)
+
+那怎麼決定一個 feature 屬於哪個 cluster 呢 ? 看 feature 跟哪個 prototype 的距離比較近，就屬於那個 prototype 的 cluster
+
+要計算 prototype，首先要知道每個 class 的 feature 落在哪裡，這步驟可以直接處理 global attention $\mathcal{X}$，flatten 每個 class 的 feature map $(H, W)$ 當作 class 的其中一個 feature
+
+不過作者提出一個結合 local attention 的方法來求得 class 的 feature，或稱 category-specific feature
 
 
 ### Category-specific Feature
@@ -155,22 +161,37 @@ $3*3$ 個 feature vectors 的加總，得到 $(1, 1, 5)$ 的 feature vector
 
 ---
 
+因為舉的例子有 5 個 classes，每個 classes 都要找到 prototype，而 $R_c$ (維度 $(5, 3, 3)$) 包含每個 class 的 local features，顯然是可以做結合的好選項
 
+作者將 encoder 過 conv1x1 前的 feature $\mathcal{M}$ 拿來和 $R_c$ 相乘，前者沒有經過降維，保留的資訊相比 global attention $\mathcal{X}$ 更加完整，和 local 的 $R_c$ 結合可以讓 prototype 同時保有兩者的資訊
 
 ![](https://i.imgur.com/XH5LHFT.png)
 
+因為每個 class 都要計算 prototype，舉例有 5 個 classes，把 $(5, 3, 3)$ 的 $R_c$ 拆成 5 個 $(3, 3)$ 的 featurs，每個 feature 都分別和 $\mathcal{M}$ 相乘
 
+這樣的意義是，$R_c$ 具有每個 class 的 local 資訊，可以輔助 highlight 出在 $\mathcal{M}$ 上對 class 比較重要的 feature
 
 
 ![](https://i.imgur.com/9Wz7qGn.png)
 
+下面是相乘的示意圖，對著 position 相乘
+
 ![](https://i.imgur.com/SP4B2yi.png)
 
+如此一來，就可以成功 highlight 出那些 position 的 features 對於 class 是重要的
 
-![](https://i.imgur.com/tFPwI76.png)
+![](https://i.imgur.com/6mXtAiD.png)
 
+最後再把每個 class 得到的 weighted features 對著 position 加總，得到 category-specific features $F_c$，而上下這兩個步驟其實就是 weighted sum
+
+不過到這邊我有個疑惑的點，最後對著 position 加總我認為會失去 local 的特徵了，因為「對 class ==不重要==的 feature」的加總結果可能跟「對 class 來說是==重要==的 feature」的加總結果是一樣的
 
 ![](https://i.imgur.com/T2v5mgU.png)
+
+
+總之，透過 global 的 $\mathcal{M}$ 和 local, class-specific 的 $R_c$ 相乘，得到 category-specific features $F_c$
+
+到目前為止，取得 class 的 feature 後，就可以來找 class 的 prototype
 
 
 
