@@ -125,7 +125,10 @@ Dual attention alignment 的概念不困難，結合 global attention 和 local 
 
 但是因為 local attention 的 spatial size 和 global attention 的 spatial size 不一樣，所以需要先 resize local attention
 
-除了 resize，作者還將 local attention 的每個數值都除以 local attention 的總和，好讓整個 local attention 的總和為 $1$，這步驟的目的是為了好讓接下來的 element-wise multiplication 能具有 multiple instance learning 中的 pooling 的效果
+除了 resize，作者還將每個 class 的 local attention 的每個數值都除以該 class local attention 的總和，讓每個 class 的 local attention 的總和為 $1$，這步驟的目的是為了讓接下來的 element-wise multiplication 能具有 multiple instance learning 中的 pooling 的效果
+
+$\mathcal{R}_{c}=\frac{\mathcal{A}_{c}}{\sum_{i}\left[\mathcal{A}_{c}\right]_{i}}$
+
 
 ![](https://i.imgur.com/ufT8kaw.png)
 
@@ -133,6 +136,8 @@ Dual attention alignment 的概念不困難，結合 global attention 和 local 
 $3*3$ 個 feature vectors 的加總，得到 $(1, 1, 5)$ 的 feature vector
 
 這條 feature vector 再過 activation function 得到 classification prediction
+
+$p_{c}=\sigma\left(\sum_{i}\left[\mathcal{X}_{c} \odot \mathcal{R}_{c}\right]_{i}\right)$
 
 ![](https://i.imgur.com/WRwhokx.png)
 
@@ -156,7 +161,7 @@ $3*3$ 個 feature vectors 的加總，得到 $(1, 1, 5)$ 的 feature vector
 
 ### Category-specific Feature
 
-{%youtube 2P7sHqD9FCk %}
+{%youtube lWr_W1G4jm8 %}
 
 
 ---
@@ -191,7 +196,7 @@ $3*3$ 個 feature vectors 的加總，得到 $(1, 1, 5)$ 的 feature vector
 
 總之，透過 global 的 $\mathcal{M}$ 和 local, class-specific 的 $R_c$ 相乘，得到 category-specific features $F_c$
 
-到目前為止，取得 class 的 feature 後，就可以來找 class 的 prototype
+到目前為止，取得 class 的 feature 後，接下來要找 class 的 prototype
 
 
 
@@ -199,12 +204,77 @@ $3*3$ 個 feature vectors 的加總，得到 $(1, 1, 5)$ 的 feature vector
 
 {%youtube _lKAT_2DDAw %}
 
+---
+
+而前面講述到的例子是 input 只有一張影像，可以計算該張影像對於每個 class 的 feature，也就是 category-specific features
+
+但是要找 prototype，需要多一點 features 才能找到最能代表該 class 的 prototype，所以只要找到每張影像的 category-specific features $F_c$，就可以找每個 class 的 prototype
+
 
 ![](https://i.imgur.com/WgPTb0G.png)
+
+最理想的情況是可以一口氣找完所有影像的 $F_c$，但是我想可能因為記憶體大小的問題，所以作者局部的在 mini-batch 找 prototype 再隨著 training steps 更新
+
+至於作者怎麼找 prototype ?
+
+輸入一張影像給模型，模型可以透過 global attention 或 dual attention alignment 分類，並輸出這張影像屬於每個類別的機率，這個機率可以視作模型的 confidence
+
+又因為模型對每張影像都會求 5 個 category-specific feature $F_c$，$F_c$ 取得的方法和 $p_c$ 取得的方法又差不多，所以可以視為模型有多大的信心 (confidence) 認為某個 category-specific feature $F_c$ 屬於某個 class
+
+換個角度看，對於一個 class，每張影像都能得到屬於這個 class 的 feature $F_c$，又能得到模型對於 feature $F_c$ 的 confidence，接下來的做法就很值觀了，就是做**加權平均**找 prototype
+
 
 
 ![](https://i.imgur.com/gIOUo4g.png)
 
+
+做法如下圖，$F_c$ 乘 $p_c$ 做最後再加起來，也就是加權相加，$\sum_{k}^{K} p_{k} \cdot \mathcal{F}_{k}$
+
 ![](https://i.imgur.com/p7pmduA.png)
 
+要計算加權平均，就把加權相加除以權重總合，也就是除以 $\sum_{k}^{K} {p}$，$K$ 是 batch size，以這個 case 來說 K=4
+
 ![](https://i.imgur.com/zaqm7pT.png)
+
+
+前面提及，因為沒有辦法一口氣算完所有影像的 $F_c$，所以計算 mini-batch 再隨著 training step 更新 prototype，原論文的完整公式如下，$\beta$ 的預設值是 0.7
+
+$\mathcal{P}_{t+1}=\beta \cdot \mathcal{P}_{t}+(1-\beta) \cdot \frac{\sum_{k}^{K} p_{k} \cdot \mathcal{F}_{k}}{\sum_{k}^{K} p_{k}}$
+
+我個人很好奇為什麼 $\beta$ 預設是 0.7，不過作者沒有對這個超參數做實驗，不過舉個例子如下 :
+
+$(((0.7P_0 + 0.3P_1)0.7+0.3P_2)0.7+0.3P_3)0.7+0.3P_4 \\
+= ((0.49P_0+0.21P_1+0.3P_2)0.7+0.3P_3)0.7+0.3P_4 \\ =
+(0.343P_0+0.147P_1+0.21P_2+0.3P_3)0.7+0.3P_4 \\ = 0.2401P_0+0.1029P_1+0.147P_2+0.21P_3+0.3P_4$
+
+雖然一開始 $P_1$ 的影響很大，不過隨著 training step 增加，$P_1$ 的影響力會逐漸被稀釋，變成以當前計算的 prototype $P$ 為主
+
+不過我是好奇 : 一開始模型還不穩定，$P_1$ 在一開始的影響力又相對比較大，這樣不會影響到模型的收斂嗎 ? 這個問題等到介紹完 prototype loss 再來慢慢思考
+
+對於 prototype，前面提到可以想成就是在做 cluster，cluster 講求「類內距離越近越好，類間距離越遠越好」，也就是一個 class 的 cluster 越聚集越好，不同個 class 的 cluster 彼此越疏遠越好
+
+
+$(6-1)\ \mathcal{L}_{\text {Intra }}=\frac{1}{N} \sum_{c=1}^{N}\left\|\mathcal{F}_{c}-\mathcal{P}_{c}\right\|_{2}^{2}$
+
+首先來看「類內距離越近越好」，也就是對於一個 class 的 cluster 來說，它的每個 feature $F_c$ 都距離它的 prototype 越近越好，簡言之就是計算歐式距離，距離越小，loss 越低
+
+$(6-2)\ \mathcal{L}_{\text {Inter }}=\frac{1}{N(N-1)} \sum_{c=1}^{N} \sum_{0 \leq j \neq c \leq N}^{N} \max \left(0, \delta-\left\|\mathcal{F}_{j}-\mathcal{P}_{c}\right\|_{2}^{2}\right)$
+
+再來看「類間距離越遠越好」，$\delta$ 是超參數，是 inter-class margin，表示類間的距離，公式拆解來看如下
+
+$\sum_{0 \leq j \neq c \leq N}^{N} \max \left(0, \delta-\left\|\mathcal{F}_{j}-\mathcal{P}_{c}\right\|_{2}^{2}\right)$
+
+$\left\|\mathcal{F}_{j}-\mathcal{P}_{c}\right\|_{2}^{2}$ 是==不屬於當前 class 的 feature $F_j$== 和當前 class 的 prototype 的距離，$\left\|\mathcal{F}_{j}-\mathcal{P}_{c}\right\|_{2}^{2}$ 越大，$\delta-\left\|\mathcal{F}_{j}-\mathcal{P}_{c}\right\|_{2}^{2}$ 會越小，直到 $\left\|\mathcal{F}_{j}-\mathcal{P}_{c}\right\|_{2}^{2} > \delta$ 會有 loss 為 0，也就是兩個 clusters 已經達到預期隔開的程度
+
+剩下外部的公式就很好理解了，$\sum_{c=1}^{N}$ 每個 cluster 都要跟其他所有 cluster $c$ 的 feature $F_j$ 計算，$\frac{1}{N(N-1)}$ 總共會計算 $N(N+1)$ 次取平均
+
+![](https://i.imgur.com/hn1GkOL.png)
+
+## Bounding Box
+
+到目前為止所講解的都是跟分類有關，例如 : global attention 和 dual attention alignment，或是講到
+
+## Unsupervised Knowledge Distillation
+
+
+## Unified Training
